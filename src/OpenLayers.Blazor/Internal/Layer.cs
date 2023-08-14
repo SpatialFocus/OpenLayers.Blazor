@@ -2,6 +2,8 @@
 
 public class Layer
 {
+    public string? Title { get; set; }
+    public string? Type { get; set; }
     public string? ClassName { get; set; }
     public double Opacity { get; set; } = 1;
     public bool Visibility { get; set; } = true;

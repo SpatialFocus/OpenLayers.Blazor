@@ -24,6 +24,10 @@ export function MapOLLoadGeoJson(mapId, url) {
     _MapOL[mapId].loadGeoJson(url);
 }
 
+export function MapOLAddGeoJsonLayer(mapId, json, title) {
+    _MapOL[mapId].addGeoJsonLayer(json, title);
+}
+
 export function MapOLZoomToExtent(mapId, extent) {
     _MapOL[mapId].setZoomToExtent(extent);
 }
@@ -62,6 +66,10 @@ export function MapOLUpdateLayer(mapId, layer) {
 
 export function MapOLSetVisibleExtent(mapId, extent) {
     _MapOL[mapId].setVisibleExtent(extent);
+}
+
+export function MapOLInitializeLayerSwitcher(mapId, label) {
+    _MapOL[mapId].initializeLayerSwitcher(label);
 }
 
 // --- MapOL ----------------------------------------------------------------------------//
@@ -265,8 +273,16 @@ MapOL.prepareLayers = function (layers) {
     return ollayers;
 }
 
+MapOL.prototype.initializeLayerSwitcher = function (label) {
+    this.Map.addControl(new ol.control.LayerSwitcher({
+        tipLabel: label,
+        layers: this.Map.getLayers()
+        })
+    );
+}
+
 MapOL.prototype.setLayers = function (layers) {
-     this.Map.setLayers(MapOL.prepareLayers(layers));
+    this.Map.setLayers(MapOL.prepareLayers(layers));
 }
 
 MapOL.prototype.removeLayer = function (layer) {
@@ -426,6 +442,34 @@ MapOL.prototype.loadGeoJson = function (json) {
         });
 
         this.Map.addLayer(this.GeoLayer);
+    }
+}
+
+MapOL.prototype.addGeoJsonLayer = function (json, title) {
+    if (this.GeoLayers && this.GeoLayers[title]) {
+        var source = this.GeoLayers[title].getSource();
+
+        source.clear();
+    }
+
+    if (!json) return;
+
+    var geoSource = new ol.source.Vector({
+        features: (new ol.format.GeoJSON()).readFeatures(json, { featureProjection: "EPSG:3857" }) // this.Defaults.coordinatesProjection })
+    });
+
+    if (this.GeoLayers && this.GeoLayers[title]) {
+        this.GeoLayers[title].setSource(geoSource);
+    }
+    else {
+        this.GeoLayers = this.GeoLayers || {};
+        this.GeoLayers[title] = new ol.layer.Vector({
+            title: title,
+            source: geoSource,
+            style: (feature) => this.getGeoStyle(feature)
+        });
+
+        this.Map.addLayer(this.GeoLayers[title]);
     }
 }
 
@@ -689,36 +733,23 @@ MapOL.prototype.flagStyle = function (marker) {
 MapOL.prototype.awesomeStyle = function (marker) {
     return [
         new ol.style.Style({
-            image: new ol.style.Icon({
-                anchor: [0, 14],
-                size: [56, 21],
-                offset: [0, 0],
-                opacity: 1,
-                scale: 0.5,
-                color: marker.color ?? this.Defaults.color,
-                anchorXUnits: 'pixels',
-                anchorYUnits: 'pixels',
-                src: './_content/OpenLayers.Blazor/img/pin-back.png'
-            }),
-        }),
-        new ol.style.Style({
             text: new ol.style.Text({
-                text: String.fromCodePoint(0xF041), // Map Marker
+                text: String.fromCodePoint(0xf13d), // Map Marker
                 scale: 2,
-                font: '900 18px "Font Awesome 6 Free"',
+                font: '900 12px "Font Awesome 6 Free"',
                 textBaseline: 'bottom',
-                fill: new ol.style.Fill({ color: marker.backgroundColor ?? this.Defaults.backgroundColor }),
-                stroke: new ol.style.Stroke({ color: marker.borderColor ?? this.Defaults.borderColor, width: 3 })
+                fill: new ol.style.Fill({ color: marker.backgroundColor ?? 'lightgray' }),
+                stroke: new ol.style.Stroke({ color: marker.borderColor ?? 'black', width: 2 })
             })
         }),
         new ol.style.Style({
             text: new ol.style.Text({
-                text: marker.properties?.label ?? this.Defaults.label,
+                text: marker.properties?.name ?? "",
                 offsetY: -22,
                 opacity: 1,
                 scale: 1,
-                font: '900 18px "Font Awesome 6 Free"',
-                fill: new ol.style.Fill({ color: marker.color ?? this.Defaults.color })
+                font: '400 12px "Arial"',
+                fill: new ol.style.Fill({ color: marker.color ?? 'white' })
             })
         })
     ];

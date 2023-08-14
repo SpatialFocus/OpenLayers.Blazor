@@ -372,6 +372,16 @@ public partial class Map : IAsyncDisposable
     }
 
     /// <summary>
+    ///     Loads GeoJson string to a new layer to the map
+    /// </summary>
+    /// <param name="json">GeoJson Data</param>
+    /// <param name="title">Layer Title</param>
+    public ValueTask AddGeoJsonLayer(string json, string title)
+    {
+        return _module?.InvokeVoidAsync("MapOLAddGeoJsonLayer", _mapId, json, title) ?? ValueTask.CompletedTask;
+    }
+
+    /// <summary>
     ///     Centers the map to the current GPS geo location
     /// </summary>
     public ValueTask CenterToCurrentGeoLocation()
@@ -424,6 +434,16 @@ public partial class Map : IAsyncDisposable
     public ValueTask UpdateLayer(Layer layer)
     {
         return _module?.InvokeVoidAsync("MapOLUpdateLayer", _mapId, layer.InternalLayer) ?? ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    ///     Initialize Layer Switcher
+    /// </summary>
+    /// <param name="label"></param>
+    /// <returns></returns>
+    public ValueTask InitializeLayerSwitcher(string label)
+    {
+        return _module?.InvokeVoidAsync("MapOLInitializeLayerSwitcher", _mapId, label) ?? ValueTask.CompletedTask;
     }
 
     /// <summary>

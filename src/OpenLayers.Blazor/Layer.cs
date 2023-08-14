@@ -18,6 +18,20 @@ public class Layer : ComponentBase
     }
 
     [Parameter]
+    public string? Title
+    {
+        get => _internalLayer.Title;
+        set => _internalLayer.Title = value;
+    }
+
+    [Parameter]
+    public string? Type
+    {
+        get => _internalLayer.Type;
+        set => _internalLayer.Type = value;
+    }
+
+    [Parameter]
     public bool Visibility
     {
         get => _internalLayer.Visibility;
