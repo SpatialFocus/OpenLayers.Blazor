@@ -455,7 +455,7 @@ MapOL.prototype.addGeoJsonLayer = function (json, title) {
     if (!json) return;
 
     var geoSource = new ol.source.Vector({
-        features: (new ol.format.GeoJSON()).readFeatures(json, { featureProjection: "EPSG:3857" }) // this.Defaults.coordinatesProjection })
+        features: (new ol.format.GeoJSON()).readFeatures(json, { featureProjection: this.Map.getView().getProjection().getCode() })
     });
 
     if (this.GeoLayers && this.GeoLayers[title]) {
@@ -566,7 +566,7 @@ MapOL.prototype.onMapClick = function (evt, popup, element) {
 
     if (invokeMethod) {
         invokeMethod = false;
-        var coordinate = ol.proj.transform(evt.coordinate, 'EPSG:3857', this.Defaults.coordinatesProjection)
+        var coordinate = ol.proj.transform(evt.coordinate, this.Map.getView().getProjection().getCode(), this.Defaults.coordinatesProjection)
         var point = { Y: coordinate[1], X: coordinate[0] };
         this.Instance.invokeMethodAsync('OnInternalClick', point);
     }
@@ -632,7 +632,11 @@ MapOL.prototype.disableVisibleExtentChanged = false;
 
 MapOL.prototype.setVisibleExtent = function (extent) {
     this.disableVisibleExtentChanged = true;
-    this.Map.getView().fit(new Array(extent.x1, extent.y1, extent.x2, extent.y2), this.Map.getSize());
+
+    var coordinate1 = ol.proj.transform([extent.x1, extent.y1], this.Defaults.coordinatesProjection, this.Map.getView().getProjection().getCode())
+    var coordinate2 = ol.proj.transform([extent.x2, extent.y2], this.Defaults.coordinatesProjection, this.Map.getView().getProjection().getCode())
+    this.Map.getView().fit(new Array(coordinate1[0], coordinate1[1], coordinate2[0], coordinate2[1]), this.Map.getSize());
+
     this.disableVisibleExtentChanged = false;
 }
 
