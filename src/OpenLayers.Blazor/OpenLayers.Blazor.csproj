@@ -2,21 +2,26 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<Version>0.1.1</Version>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Authors>Laurent Christen</Authors>
+		<Authors>pergerch</Authors>
+		<Company>SpatialFocus</Company>
 		<Copyright>2023 by Laurent Christen</Copyright>
-		<PackageId>OpenLayers.Blazor</PackageId>
-		<PublishRelease>true</PublishRelease>
+		<Title>A C# wrapper for OpenLayers</Title>
+		<Description>OpenLayers.Blazor is a wrapper offering easy-to-use Blazor components that expose the OpenLayers API in C#.</Description>
+		<PackageId>SpatialFocus.OpenLayers.Blazor</PackageId>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<OutputType>Library</OutputType>
-		<IsPackable>true</IsPackable>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<PackageProjectUrl>https://github.com/lolochristen/OpenLayers.Blazor</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/SpatialFocus/OpenLayers.Blazor</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageTags>OpenLayers;Blazor;Map;dotnet</PackageTags>
 		<PackageIcon>icon.png</PackageIcon>
+		<PackageIconUrl>https://raw.githubusercontent.com/SpatialFocus/OpenLayers.Blazor/main/icon.png</PackageIconUrl>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -34,6 +39,10 @@
 		</None>
 	</ItemGroup>
 
+	<PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+	</PropertyGroup>
+
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
 		<DefineConstants>$(DefineConstants);NET6_0</DefineConstants>
 	</PropertyGroup>
@@ -43,19 +52,19 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
-	  <NoWarn>1701;1702;BL0005;BL0007</NoWarn>
+		<NoWarn>1701;1702;BL0005;BL0007</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
-	  <NoWarn>1701;1702;BL0005;BL0007</NoWarn>
+		<NoWarn>1701;1702;BL0005;BL0007</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
-	  <NoWarn>1701;1702;BL0005;BL0007</NoWarn>
+		<NoWarn>1701;1702;BL0005;BL0007</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
-	  <NoWarn>1701;1702;BL0005;BL0007</NoWarn>
+		<NoWarn>1701;1702;BL0005;BL0007</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
@@ -69,10 +78,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="MinVer" Version="4.3.0">
-	    <PrivateAssets>all</PrivateAssets>
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
+		<PackageReference Include="MinVer" Version="4.3.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
 
 </Project>
