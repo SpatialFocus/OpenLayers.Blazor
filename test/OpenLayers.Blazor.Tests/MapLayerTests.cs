@@ -15,7 +15,7 @@ public class MapLayerTests
     {
         using var ctx = new TestContext();
 
-        var moduleInterop = ctx.JSInterop.SetupModule("./_content/OpenLayers.Blazor/openlayers_interop.js");
+        var moduleInterop = ctx.JSInterop.SetupModule("./_content/SpatialFocus.OpenLayers.Blazor/openlayers_interop.js");
         moduleInterop.Mode = JSRuntimeMode.Loose;
 
         var component = ctx.RenderComponent<Map>(

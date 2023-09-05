@@ -16,11 +16,9 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Build Project
-      run: dotnet build OpenLayers.Blazor.sln -c Release
     - name: Publish NuGet
       id: publishNuGet
-      uses: alirezanet/publish-nuget@v3.0.0
+      uses: alirezanet/publish-nuget@v3.1.0
       with:
         # Filepath of the project to be packaged, relative to root of repository
         PROJECT_FILE_PATH: src/OpenLayers.Blazor/OpenLayers.Blazor.csproj
@@ -32,6 +30,7 @@ jobs:
         INCLUDE_SYMBOLS: true
         # Format of the git tag, [*] gets replaced with actual version
         TAG_FORMAT: build_*
+        VERSION_STATIC: 0.1.1
     - name: Persist NuGet artifact
       uses: actions/upload-artifact@v1
       if: ${{steps.publishNuGet.outputs.PACKAGE_NAME != ''}}
