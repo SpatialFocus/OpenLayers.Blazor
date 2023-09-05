@@ -263,7 +263,12 @@ public partial class Map : IAsyncDisposable
     [JSInvokable]
     public async Task OnInternalFeatureClick(Internal.Feature feature)
     {
-        await OnFeatureClick.InvokeAsync(new Feature(feature));
+        var f = new Feature(feature);
+
+        _popupContext = f;
+        await OnFeatureClick.InvokeAsync(f);
+        StateHasChanged();
+     
     }
 
     [JSInvokable]

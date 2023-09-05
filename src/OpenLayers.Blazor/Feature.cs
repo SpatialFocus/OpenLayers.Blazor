@@ -31,4 +31,11 @@ public class Feature : ComponentBase
         get => InternalFeature.Geometry;
         set => InternalFeature.Geometry = value;
     }
+
+    [Parameter]
+    public Dictionary<string, dynamic> Properties
+    {
+        get => InternalFeature.Properties;
+        set => InternalFeature.Properties = value;
+    }
 }
