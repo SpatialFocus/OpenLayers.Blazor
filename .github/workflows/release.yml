@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build Project
-      run: dotnet build OpenLayers.Blazor/OpenLayers.Blazor.sln -c Release
+      run: dotnet build OpenLayers.Blazor.sln -c Release
     - name: Publish NuGet
       id: publishNuGet
       uses: alirezanet/publish-nuget@v3.0.0
