@@ -515,7 +515,7 @@ MapOL.prototype.getReducedFeature = function (feature) {
         type: "Feature",
         geometry: {
             type: feature.getGeometry().getType(),
-            coordinates: feature.getGeometry().getCoordinates()
+            coordinates: ol.proj.transform(feature.getGeometry().getCoordinates(), this.Map.getView().getProjection().getCode(), this.Defaults.coordinatesProjection)
         },
         properties: properties
     };
