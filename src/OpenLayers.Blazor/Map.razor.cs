@@ -268,7 +268,6 @@ public partial class Map : IAsyncDisposable
         _popupContext = f;
         await OnFeatureClick.InvokeAsync(f);
         StateHasChanged();
-     
     }
 
     [JSInvokable]
@@ -324,7 +323,7 @@ public partial class Map : IAsyncDisposable
     {
         await OnRenderComplete.InvokeAsync();
     }
-    
+
     /// <summary>
     ///     Passes the center coordination to underlying map
     /// </summary>

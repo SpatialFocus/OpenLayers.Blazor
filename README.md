@@ -17,7 +17,7 @@ https://openlayers-blazor-demo.laurent-christen.ch/
     <head>
     ...
         <link href="https://cdnjs.cloudflare.com/ajax/libs/openlayers/7.3.0/ol.min.css" rel="stylesheet" />
-        <link href="_content/OpenLayers.Blazor/OpenLayers.Blazor.css" rel="stylesheet" />
+        <link href="_content/SpatialFocus.OpenLayers.Blazor/OpenLayers.Blazor.css" rel="stylesheet" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/openlayers/7.3.0/dist/ol.min.js"></script>
     ...
     </head>

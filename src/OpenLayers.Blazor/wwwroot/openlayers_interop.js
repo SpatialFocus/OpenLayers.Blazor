@@ -643,9 +643,9 @@ MapOL.prototype.setVisibleExtent = function (extent) {
 //--- Styles -----------------------------------------------------------------//
 
 MapOL.prototype.pinStyle = function (marker) {
-    var src = './_content/OpenLayers.Blazor/img/marker-pin-red.png';
+    var src = './_content/SpatialFocus.OpenLayers.Blazor/img/marker-pin-red.png';
     if (marker.color == null || marker.color != '#FFFFFF')
-        src = './_content/OpenLayers.Blazor/img/marker-pin-'+marker.color+'.png';
+        src = './_content/SpatialFocus.OpenLayers.Blazor/img/marker-pin-'+marker.color+'.png';
     return [
         new ol.style.Style({
             image: new ol.style.Icon({
@@ -656,7 +656,7 @@ MapOL.prototype.pinStyle = function (marker) {
                 scale: marker.scale,
                 anchorXUnits: 'pixels',
                 anchorYUnits: 'pixels',
-                src: './_content/OpenLayers.Blazor/img/pin-back.png'
+                src: './_content/SpatialFocus.OpenLayers.Blazor/img/pin-back.png'
             })
         }),
         new ol.style.Style({
@@ -771,9 +771,23 @@ MapOL.prototype.customImageStyle = function (marker) {
                 anchorXUnits: 'pixels',
                 anchorYUnits: 'pixels',
                 src: marker.content
-                })
             })
-        ];
+        })
+    ];
+}
+
+MapOL.prototype.imageStyle = function (marker) {
+    return [
+        new ol.style.Style({
+            image: new ol.style.Icon({
+                opacity: 1,
+                scale: 0.75,
+                anchorXUnits: 'pixels',
+                anchorYUnits: 'pixels',
+                src: marker.get("content")
+            })
+        })
+    ];
 }
 
 MapOL.prototype.lineStyle = function (line) {
@@ -813,7 +827,7 @@ MapOL.prototype.getGeoStyle = function (feature) {
     var that = this;
 
     var geoStyles = {
-        'Point': that.awesomeStyle(feature),
+        'Point': that.imageStyle(feature),
         'LineString': new ol.style.Style({
             stroke: new ol.style.Stroke({
                 color: 'green',
