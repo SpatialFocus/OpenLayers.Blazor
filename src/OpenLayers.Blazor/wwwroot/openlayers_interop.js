@@ -179,7 +179,7 @@ function MapOL(mapId, popupId, defaults, center, zoom, markers, shapes, layers, 
     var popup = new ol.Overlay({
         element: popupElement,
         positioning: 'bottom-center',
-        stopEvent: false,
+        stopEvent: true,
         offset: [0, -50],
     });
 
