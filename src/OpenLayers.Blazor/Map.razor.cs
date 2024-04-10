@@ -402,7 +402,7 @@ public partial class Map : IAsyncDisposable
         var f = new Feature(feature);
 
         _popupContext = f;
-        await OnFeatureClick.InvokeAsync(new Feature(f));
+        await OnFeatureClick.InvokeAsync(f);
         StateHasChanged();
     }
 

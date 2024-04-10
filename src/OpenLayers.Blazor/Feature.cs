@@ -69,11 +69,4 @@ public class Feature : ComponentBase
         get => InternalFeature.Coordinates;
         set => InternalFeature.Coordinates = value;
     }
-
-    [Parameter]
-    public Dictionary<string, dynamic> Properties
-    {
-        get => InternalFeature.Properties;
-        set => InternalFeature.Properties = value;
-    }
 }

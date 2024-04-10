@@ -243,7 +243,7 @@ function MapOL(mapId, popupId, options, center, zoom, rotation, interactions, ma
     var popup = new ol.Overlay({
         element: popupElement,
         positioning: "bottom-center",
-        stopEvent: false, // cp: true
+        stopEvent: true,
         offset: [0, -50]
     });
 
@@ -399,7 +399,7 @@ MapOL.prototype.prepareLayers = function (layers) {
     });
 
     return ollayers;
-};
+}
 
 MapOL.prototype.initializeLayerSwitcher = function (label) {
     this.Map.addControl(new ol.control.LayerSwitcher({
@@ -411,7 +411,7 @@ MapOL.prototype.initializeLayerSwitcher = function (label) {
 
 MapOL.prototype.setLayers = function (layers) {
     this.Map.setLayers(this.prepareLayers(layers));
-};
+}
 
 MapOL.prototype.removeLayer = function (layer) {
     this.Map.getAllLayers().forEach((l) => {
@@ -420,15 +420,15 @@ MapOL.prototype.removeLayer = function (layer) {
             if (source.urls[0] == layer.source.url) {
                 this.Map.removeLayer(l);
             }
-        } catch (e) {
         }
+        catch { }
     });
-};
+}
 
 MapOL.prototype.addLayer = function (layer) {
     const ollayers = this.prepareLayers([layer]);
     this.Map.addLayer(ollayers[0]);
-};
+}
 
 MapOL.prototype.updateLayer = function (layer) {
     const ollayers = this.prepareLayers([layer]);
@@ -439,7 +439,7 @@ MapOL.prototype.updateLayer = function (layer) {
         olayer.setZIndex(layer.zindex);
         olayer.setExtent(layer.extent);
     }
-};
+}
 
 MapOL.prototype.findLayer = function (layer) {
     let foundLayer = undefined;
@@ -455,7 +455,7 @@ MapOL.prototype.findLayer = function (layer) {
         }
     });
     return foundLayer;
-};
+}
 
 MapOL.prototype.setMarkers = function (markers) {
     var source = this.Markers.getSource();
@@ -466,7 +466,7 @@ MapOL.prototype.setMarkers = function (markers) {
             source.addFeature(feature);
         });
     }
-};
+}
 
 MapOL.prototype.setShapes = function (shapes) {
     var source = this.Geometries.getSource();
@@ -477,7 +477,7 @@ MapOL.prototype.setShapes = function (shapes) {
             source.addFeature(feature);
         });
     }
-};
+}
 
 MapOL.prototype.loadGeoJson = function (json, dataProjection, raiseEvents) {
     var that = this;
@@ -1337,6 +1337,9 @@ MapOL.prototype.getGeoStyle = function (feature) {
         })
     };
 
+    return geoStyles[feature.getGeometry().getType()];
+}
+
 MapOL.transformCoordinates = function(coordinates, source, destination) {
     var newCoordinates;
     if (source === destination)
@@ -1388,7 +1391,7 @@ MapOL.WGStoLV03y = function WGStoLV03y(lat, lng) {
         44.54 * Math.pow(lng_aux, 3);
 
     return y;
-};
+}
 
 // Convert WGS lat/long (° dec) to CH x
 MapOL.WGStoLV03x = function WGStoLV03x(lat, lng) {
@@ -1414,7 +1417,7 @@ MapOL.WGStoLV03x = function WGStoLV03x(lat, lng) {
         119.79 * Math.pow(lat_aux, 3);
 
     return x;
-};
+}
 
 // Convert CH y/x to WGS lat
 MapOL.CHtoLV03lat = function CHtoLV03lat(y, x) {
@@ -1436,7 +1439,7 @@ MapOL.CHtoLV03lat = function CHtoLV03lat(y, x) {
     lat = (lat * 100) / 36;
 
     return lat;
-};
+}
 
 // Convert CH y/x to WGS long
 MapOL.CHtoLV03lng = function CHtoLV03lng(y, x) {
@@ -1457,7 +1460,7 @@ MapOL.CHtoLV03lng = function CHtoLV03lng(y, x) {
     lng = (lng * 100) / 36;
 
     return lng;
-};
+}
 
 // Convert DEC angle to SEX DMS
 MapOL.DECtoSEX = function DECtoSEX(angle) {
@@ -1468,7 +1471,7 @@ MapOL.DECtoSEX = function DECtoSEX(angle) {
 
     // Result in degrees sex (dd.mmss)
     return deg + min / 100 + sec / 10000;
-};
+}
 
 // Convert Degrees angle to seconds
 MapOL.DEGtoSEC = function DEGtoSEC(angle) {
@@ -1486,7 +1489,7 @@ MapOL.DEGtoSEC = function DEGtoSEC(angle) {
 
     // Result in degrees sex (dd.mmss)
     return sec + min * 60 + deg * 3600;
-};
+}
 
 // LV95 / port from https://github.com/perron2/lv95/blob/master/lib/lv95.dart
 MapOL.WGStoLV95y = function WGStoLV95y(lat, lng) {
@@ -1504,7 +1507,7 @@ MapOL.WGStoLV95y = function WGStoLV95y(lat, lng) {
         44.54 * lambda3;
 
     return y;
-};
+}
 
 // Convert WGS lat/long (° dec) to CH x
 MapOL.WGStoLV95x = function WGStoLV95x(lat, lng) {
@@ -1523,7 +1526,7 @@ MapOL.WGStoLV95x = function WGStoLV95x(lat, lng) {
         119.79 * phi3;
 
     return x;
-};
+}
 
 // Convert CH y/x to WGS lat
 MapOL.LV95toWGSlat = function LV95toWGSlat(y, x) {
@@ -1544,7 +1547,7 @@ MapOL.LV95toWGSlat = function LV95toWGSlat(y, x) {
 
     // Convert to degrees
     return (latitude * 100 / 36);
-};
+}
 
 // Convert CH y/x to WGS long
 MapOL.LV95toWGSlng = function LV95toWGSlng(y, x) {
@@ -1564,4 +1567,4 @@ MapOL.LV95toWGSlng = function LV95toWGSlng(y, x) {
 
     // Convert to degrees
     return (longitude * 100 / 36);
-};
+}

@@ -17,12 +17,12 @@ public class Layer : ComponentBase
         set => _internalLayer.Opacity = value;
     }
 
-    [Parameter]
-    public string? Title
-    {
-        get => _internalLayer.Title;
-        set => _internalLayer.Title = value;
-    }
+    //[Parameter]
+    //public string? Title
+    //{
+    //    get => _internalLayer.Title;
+    //    set => _internalLayer.Title = value;
+    //}
 
     [Parameter]
     public string? Type
