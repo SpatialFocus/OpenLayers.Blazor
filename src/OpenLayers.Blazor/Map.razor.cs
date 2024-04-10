@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using OpenLayers.Blazor.Internal;
 
 namespace OpenLayers.Blazor;
 
@@ -12,21 +13,21 @@ namespace OpenLayers.Blazor;
 /// </summary>
 public partial class Map : IAsyncDisposable
 {
-    private Coordinate? _internalCenter;
-    private Extent? _internalVisibleExtent;
-    private double? _internalZoom;
-    private INotifyCollectionChanged? _layerCollectionRef;
     private string _mapId;
-    private INotifyCollectionChanged? _markersCollectionRef;
     private IJSObjectReference? _module;
     private Feature? _popupContext;
     private string _popupId;
-    private INotifyCollectionChanged? _shapeCollectionRef;
+    private static int _counter = 0;
 
+
+    /// <summary>
+    ///     Default Constructor
+    /// </summary>
     public Map()
     {
-        _mapId = Guid.NewGuid().ToString();
-        _popupId = Guid.NewGuid().ToString();
+        _counter++;
+        _mapId = "map_" + _counter;
+        _popupId = "map_popup_" + _counter;
     }
 
     [Inject] private IJSRuntime? JSRuntime { get; set; }
@@ -44,10 +45,24 @@ public partial class Map : IAsyncDisposable
     public EventCallback<Coordinate> CenterChanged { get; set; }
 
     /// <summary>
+    ///     Gets or set the rotation of the map in radians.
+    ///     Negative value = counter-clockwise
+    ///     Positive value = clockwise
+    /// </summary>
+    [Parameter]
+    public double Rotation { get; set; } = 0;
+
+    /// <summary>
+    ///     Event when rotation changes
+    /// </summary>
+    [Parameter]
+    public EventCallback<double> RotationChanged { get; set; }
+
+    /// <summary>
     ///     Zoom level of the map
     /// </summary>
     [Parameter]
-    public double Zoom { get; set; } = 2;
+    public double Zoom { get; set; } = 5;
 
     /// <summary>
     ///     Event on zoom changes
@@ -142,9 +157,9 @@ public partial class Map : IAsyncDisposable
     public ObservableCollection<Layer> LayersList { get; } = new();
 
     /// <summary>
-    ///     Defaults to use for the map rendering
+    ///     Options to use for the map rendering
     /// </summary>
-    public Defaults Defaults { get; } = new();
+    public Options Options { get; } = new();
 
     /// <summary>
     ///     Class of the map element
@@ -166,8 +181,15 @@ public partial class Map : IAsyncDisposable
     [Parameter]
     public string CoordinatesProjection
     {
-        get => Defaults.CoordinatesProjection;
-        set => Defaults.CoordinatesProjection = value;
+        get => Options.CoordinatesProjection;
+        set => Options.CoordinatesProjection = value;
+    }
+
+    [Parameter]
+    public string ViewProjection
+    {
+        get => Options.ViewProjection;
+        set => Options.ViewProjection = value;
     }
 
     /// <summary>
@@ -176,8 +198,18 @@ public partial class Map : IAsyncDisposable
     [Parameter]
     public ScaleLineUnit ScaleLineUnit
     {
-        get => Defaults.ScaleLineUnit;
-        set => Defaults.ScaleLineUnit = value;
+        get => Options.ScaleLineUnit;
+        set => Options.ScaleLineUnit = value;
+    }
+
+    /// <summary>
+    ///     Auto PopUp
+    /// </summary>
+    [Parameter]
+    public bool AutoPopup
+    {
+        get => Options.AutoPopup;
+        set => Options.AutoPopup = value;
     }
 
     /// <summary>
@@ -186,7 +218,85 @@ public partial class Map : IAsyncDisposable
     [Parameter]
     public Extent? VisibleExtent { get; set; }
 
+    /// <summary>
+    ///     A shape providing default parameters when drawing new shapes
+    /// </summary>
+    [Parameter]
+    public ShapeType NewShapeType { get; set; }
+
+    /// <summary>
+    ///     Get or set if new shapes shall be drawn
+    /// </summary>
+    [Parameter]
+    public bool EnableNewShapes { get; set; }
+
+    /// <summary>
+    ///     Get or sets if the position of points shall be snapped.
+    /// </summary>
+    [Parameter]
+    public bool EnableShapeSnap { get; set; }
+
+    /// <summary>
+    ///     Get or sets if drawing new shapes is enabled.
+    /// </summary>
+    [Parameter]
+    public bool EnableEditShapes { get; set; }
+
+    /// <summary>
+    ///     Get or sets if drawing shapes is in freehand mode.
+    /// </summary>
+    [Parameter]
+    public bool Freehand { get; set; }
+
     private DotNetObjectReference<Map>? Instance { get; set; }
+
+    [Parameter] public EventCallback<Shape> OnShapeAdded { get; set; }
+
+    [Parameter] public EventCallback<Shape> OnShapeChanged { get; set; }
+
+    [Parameter] public Func<Shape, StyleOptions> ShapeStyleCallback { get; set; } = DefaultShapeStyleCallback;
+
+    /// <summary>
+    /// Set or gets if any interaction is active.
+    /// </summary>
+    [Parameter]
+    public bool InteractionsEnabled { get; set; }
+
+
+    /// <summary>
+    /// Get or sets if the zoom control is visible
+    /// </summary>
+    [Parameter] public bool ZoomControl { get => Options.ZoomControl; set => Options.ZoomControl = value; }
+
+    /// <summary>
+    /// Gets or sets if the attribution control is visible
+    /// </summary>
+    [Parameter] public bool AttributionControl { get => Options.AttributionControl; set => Options.AttributionControl = value; }
+
+    /// <summary>
+    /// Gets or sets if full screen control is visible 
+    /// </summary>
+    [Parameter] public bool FullScreenControl { get => Options.FullScreenControl; set => Options.FullScreenControl = value; }
+
+    /// <summary>
+    /// Gets or sets boolean if zoom slider control is visible
+    /// </summary>
+    [Parameter] public bool ZoomSliderControl { get => Options.ZoomSliderControl; set => Options.ZoomSliderControl = value; }
+
+    /// <summary>
+    /// Gets or sets boolean if rotate to 0 control is visible
+    /// </summary>
+    [Parameter] public bool RotateControl { get => Options.RotateControl; set => Options.RotateControl = value; }
+
+    /// <summary>
+    /// Gets or sets boolean if a overview map using first layer is visible
+    /// </summary>
+    [Parameter] public bool OverviewMap { get => Options.OverviewMap; set => Options.OverviewMap = value; }
+
+    /// <summary>
+    /// Gets or sets boolean if zoom to extent control is visible
+    /// </summary>
+    [Parameter] public bool ZoomToExtentControl { get => Options.ZoomToExtentControl; set => Options.ZoomToExtentControl = value; }
 
     /// <summary>
     ///     Disposing resources.
@@ -206,40 +316,53 @@ public partial class Map : IAsyncDisposable
         }
     }
 
-    protected override async Task OnParametersSetAsync()
+    public override Task SetParametersAsync(ParameterView parameters)
     {
-        if (_markersCollectionRef != null)
-        {
-            _markersCollectionRef.CollectionChanged -= MarkersOnCollectionChanged;
-            if (!ReferenceEquals(_markersCollectionRef, MarkersList)) await SetMarkers(MarkersList);
-        }
+        if (parameters.TryGetValue(nameof(Zoom), out double zoom) && zoom != Zoom)
+            _ = SetZoom(zoom);
 
-        MarkersList.CollectionChanged += MarkersOnCollectionChanged;
-        _markersCollectionRef = MarkersList;
+        if (parameters.TryGetValue(nameof(Center), out Coordinate center) && !center.Equals(Center))
+            _ = SetCenter(center);
 
-        if (_shapeCollectionRef != null)
-        {
-            _shapeCollectionRef.CollectionChanged -= ShapesOnCollectionChanged;
-            if (!ReferenceEquals(_shapeCollectionRef, ShapesList)) await SetShapes(ShapesList);
-        }
+        if (parameters.TryGetValue(nameof(Rotation), out double rotation) && !rotation.Equals(Rotation))
+            _ = SetRotation(rotation);
 
-        ShapesList.CollectionChanged += ShapesOnCollectionChanged;
-        _shapeCollectionRef = ShapesList;
+        if (parameters.TryGetValue(nameof(VisibleExtent), out Extent extent) && !extent.Equals(VisibleExtent))
+            _ = SetVisibleExtent(extent);
 
-        if (_layerCollectionRef != null)
-        {
-            _layerCollectionRef.CollectionChanged -= LayersOnCollectionChanged;
-            if (!ReferenceEquals(_layerCollectionRef, LayersList)) await SetLayers(LayersList);
-        }
+        if (parameters.TryGetValue(nameof(InteractionsEnabled), out bool interactionsEnabled) && interactionsEnabled != InteractionsEnabled)
+            _ = SetInteractions(interactionsEnabled);
 
-        LayersList.CollectionChanged += LayersOnCollectionChanged;
-        _layerCollectionRef = LayersList;
+        short drawingChanges = 0;
+        if (parameters.TryGetValue(nameof(EnableNewShapes), out bool newShapes) && newShapes != EnableNewShapes)
+            drawingChanges++;
+        else
+            newShapes = EnableNewShapes;
 
-        if (!Center.Equals(_internalCenter)) await SetCenter(Center);
+        if (parameters.TryGetValue(nameof(EnableEditShapes), out bool editShapes) && editShapes != EnableEditShapes)
+            drawingChanges++;
+        else
+            editShapes = EnableEditShapes;
 
-        if (Zoom != _internalZoom) await SetZoom(Zoom);
+        if (parameters.TryGetValue(nameof(EnableShapeSnap), out bool shapeSnap) && shapeSnap != EnableShapeSnap)
+            drawingChanges++;
+        else
+            shapeSnap = EnableShapeSnap;
 
-        if (VisibleExtent != null && !VisibleExtent.Equals(_internalVisibleExtent)) await SetVisibleExtent(VisibleExtent);
+        if (parameters.TryGetValue(nameof(NewShapeType), out ShapeType shapeType) && shapeType != NewShapeType)
+            drawingChanges++;
+        else
+            shapeType = NewShapeType;
+
+        if (parameters.TryGetValue(nameof(Freehand), out bool freehand) && freehand != Freehand)
+            drawingChanges++;
+        else
+            freehand = Freehand;
+
+        if (drawingChanges > 0)
+            _ = SetDrawingSettings(newShapes, editShapes, shapeSnap, shapeType, freehand);
+
+        return base.SetParametersAsync(parameters);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -252,28 +375,44 @@ public partial class Map : IAsyncDisposable
             Instance ??= DotNetObjectReference.Create(this);
 
             if (_module != null)
-                await _module.InvokeVoidAsync("MapOLInit", _mapId, _popupId, Defaults, Center, Zoom,
+                await _module.InvokeVoidAsync("MapOLInit", _mapId, _popupId, Options, Center, Zoom, Rotation, InteractionsEnabled,
                     MarkersList.Select(p => p.InternalFeature).ToArray(),
                     ShapesList.Select(p => p.InternalFeature).ToArray(),
                     LayersList.Select(p => p.InternalLayer).ToArray(),
                     Instance);
+
+            MarkersList.CollectionChanged += MarkersOnCollectionChanged;
+            ShapesList.CollectionChanged += ShapesOnCollectionChanged;
+            LayersList.CollectionChanged += LayersOnCollectionChanged;
         }
+    }
+
+    protected override void OnInitialized()
+    {
+        EnableShapeSnap = true;
+        InteractionsEnabled = true;
     }
 
     [JSInvokable]
     public async Task OnInternalFeatureClick(Internal.Feature feature)
     {
+#if DEBUG
+        Console.WriteLine($"OnInternalFeatureClick: {JsonSerializer.Serialize(feature)}");
+#endif
         var f = new Feature(feature);
 
         _popupContext = f;
-        await OnFeatureClick.InvokeAsync(f);
+        await OnFeatureClick.InvokeAsync(new Feature(f));
         StateHasChanged();
     }
 
     [JSInvokable]
     public async Task OnInternalMarkerClick(Internal.Marker marker)
     {
-        var m = MarkersList.FirstOrDefault(p => p.InternalFeature.ID == marker.ID);
+#if DEBUG
+        Console.WriteLine($"OnInternalMarkerClick: {JsonSerializer.Serialize(marker)}");
+#endif
+        var m = MarkersList.FirstOrDefault(p => string.Equals(p.InternalFeature.Id.ToString(), marker.Id.ToString(), StringComparison.OrdinalIgnoreCase));
 
         if (m != null)
         {
@@ -286,6 +425,9 @@ public partial class Map : IAsyncDisposable
     [JSInvokable]
     public async Task OnInternalShapeClick(Internal.Shape shape)
     {
+#if DEBUG
+        Console.WriteLine($"OnInternalShapeClick: {JsonSerializer.Serialize(shape)}");
+#endif
         await OnShapeClick.InvokeAsync(shape);
         StateHasChanged();
     }
@@ -305,17 +447,66 @@ public partial class Map : IAsyncDisposable
     [JSInvokable]
     public async Task OnInternalCenterChanged(Coordinate coordinate)
     {
-        Center = coordinate;
-        _internalCenter = coordinate;
-        await CenterChanged.InvokeAsync(coordinate);
+        if (!coordinate.Equals(Center))
+        {
+            Center = coordinate;
+            await CenterChanged.InvokeAsync(coordinate);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnInternalRotationChanged(double rotation)
+    {
+        Rotation = rotation;
+        await RotationChanged.InvokeAsync(rotation);
     }
 
     [JSInvokable]
     public async Task OnInternalVisibleExtentChanged(Extent visibleExtent)
     {
-        VisibleExtent = visibleExtent;
-        _internalVisibleExtent = visibleExtent;
-        await VisibleExtentChanged.InvokeAsync(visibleExtent);
+        if (!visibleExtent.Equals(VisibleExtent))
+        {
+            VisibleExtent = visibleExtent;
+            await VisibleExtentChanged.InvokeAsync(visibleExtent);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnInternalShapeAdded(Internal.Shape shape)
+    {
+#if DEBUG
+        Console.WriteLine($"OnInternalShapeAdded: {JsonSerializer.Serialize(shape)}");
+#endif
+        if (ShapesList.All(p => p.Id != shape.Id.ToString()))
+        {
+            var newShape = new Shape(shape);
+            ShapesList.CollectionChanged -= ShapesOnCollectionChanged;
+            ShapesList.Add(newShape);
+            ShapesList.CollectionChanged += ShapesOnCollectionChanged;
+            await OnShapeAdded.InvokeAsync(newShape);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnInternalShapeChanged(Internal.Shape shape)
+    {
+#if DEBUG
+        Console.WriteLine($"OnInternalShapeChanged: {JsonSerializer.Serialize(shape)}");
+#endif
+        var existingShape = ShapesList.FirstOrDefault(p => p.Id == shape.Id.ToString());
+
+        if (existingShape == null)
+        {
+            await OnInternalShapeAdded(shape);
+            return;
+        }
+
+        if (!existingShape.InternalFeature.Equals(shape))
+        {
+            existingShape.InternalFeature = shape;
+            await OnShapeChanged.InvokeAsync(existingShape);
+            await existingShape.OnChanged.InvokeAsync(existingShape);
+        }
     }
 
     [JSInvokable]
@@ -331,16 +522,23 @@ public partial class Map : IAsyncDisposable
     /// <returns>Task</returns>
     public async Task SetCenter(Coordinate center)
     {
-        Center = center;
         if (_module != null) await _module.InvokeVoidAsync("MapOLCenter", _mapId, center);
-        _internalCenter = Center;
+    }
+
+    /// <summary>
+    ///     Sets the rotation of the map.
+    /// </summary>
+    /// <param name="rotation">Rotation in radians</param>
+    /// <returns>Task</returns>
+    public async Task SetRotation(double rotation)
+    {
+        if (_module != null) await _module.InvokeVoidAsync("MapOLRotate", _mapId, rotation);
     }
 
     [JSInvokable]
     public async Task OnInternalZoomChanged(double zoom)
     {
         Zoom = zoom;
-        _internalZoom = zoom;
         await ZoomChanged.InvokeAsync(zoom);
     }
 
@@ -351,9 +549,7 @@ public partial class Map : IAsyncDisposable
     /// <returns></returns>
     public async Task SetZoom(double zoom)
     {
-        Zoom = zoom;
         if (_module != null) await _module.InvokeVoidAsync("MapOLZoom", _mapId, zoom);
-        _internalZoom = Zoom;
     }
 
     /// <summary>
@@ -370,9 +566,11 @@ public partial class Map : IAsyncDisposable
     ///     Loads GeoJson data (https://geojson.org/) to the map
     /// </summary>
     /// <param name="json">GeoJson Data</param>
-    public ValueTask LoadGeoJson(JsonElement json)
+    /// <param name="dataProjection">Data projection of GeoJson</param>
+    /// <param name="raiseEvents">Raise events for new created features and add it to list of shapes</param>
+    public ValueTask LoadGeoJson(JsonElement json, string? dataProjection = null, bool? raiseEvents = true)
     {
-        return _module?.InvokeVoidAsync("MapOLLoadGeoJson", _mapId, json) ?? ValueTask.CompletedTask;
+        return _module?.InvokeVoidAsync("MapOLLoadGeoJson", _mapId, json, dataProjection, raiseEvents) ?? ValueTask.CompletedTask;
     }
 
     /// <summary>
@@ -457,10 +655,128 @@ public partial class Map : IAsyncDisposable
     /// <returns></returns>
     public async Task SetVisibleExtent(Extent extent)
     {
-        VisibleExtent = extent;
         if (_module != null) await _module.InvokeVoidAsync("MapOLSetVisibleExtent", _mapId, extent);
-        _internalVisibleExtent = extent;
     }
+
+    /// <summary>
+    ///     Set interactions settings
+    /// </summary>
+    /// <param name="active"></param>
+    /// <returns></returns>
+    public async Task SetInteractions(bool active)
+    {
+        if (_module != null) await _module.InvokeVoidAsync("MapOLSetInteractions", _mapId, active);
+    }
+
+    [JSInvokable]
+    public StyleOptions OnGetShapeStyle(Internal.Shape shape)
+    {
+#if DEBUG
+        Console.WriteLine($"OnGetShapeStyle: {JsonSerializer.Serialize(shape)}");
+#endif
+
+        return ShapeStyleCallback(new Shape(shape));
+    }
+
+    [JSInvokable]
+    public Task<StyleOptions> OnGetShapeStyleAsync(Internal.Shape shape)
+    {
+        return Task.FromResult(OnGetShapeStyle(shape));
+    }
+
+    /// <summary>
+    ///     Sets explicitly drawing settings
+    /// </summary>
+    /// <param name="newShapes"></param>
+    /// <param name="editShapes"></param>
+    /// <param name="shapeSnap"></param>
+    /// <param name="shapeType"></param>
+    /// <param name="freehand"></param>
+    /// <returns></returns>
+    public async Task SetDrawingSettings(bool newShapes, bool editShapes, bool shapeSnap, ShapeType shapeType, bool freehand)
+    {
+        try
+        {
+            if (_module != null)
+                await _module.InvokeVoidAsync("MapOLSetDrawingSettings", _mapId, newShapes, editShapes, shapeSnap, shapeType, freehand);
+        }
+        catch (Exception exp)
+        {
+            Console.Error.WriteLine("Failed to set drawing settings:\n" + exp);
+        }
+    }
+
+    /// <summary>
+    ///     Undo last drawing interaction
+    /// </summary>
+    /// <returns></returns>
+    public async Task Undo()
+    {
+        if (_module != null) await _module.InvokeVoidAsync("MapOLUndoDrawing", _mapId);
+    }
+
+    /// <summary>
+    ///     Explicit call to update an existing shape
+    /// </summary>
+    /// <param name="shape"></param>
+    /// <returns></returns>
+    public ValueTask UpdateShape(Shape shape)
+    {
+#if DEBUG
+        Console.WriteLine($"UpdateShape: {JsonSerializer.Serialize(shape.InternalFeature)}");
+#endif
+        return _module?.InvokeVoidAsync("MapOLUpdateShape", _mapId, shape.InternalFeature) ?? ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    ///     Default Style Callback
+    /// </summary>
+    /// <param name="shape"></param>
+    /// <returns></returns>
+    public static StyleOptions DefaultShapeStyleCallback(Shape shape)
+    {
+        return new StyleOptions
+        {
+            Stroke = new StyleOptions.StrokeOptions
+            {
+                Color = "blue",
+                Width = 3,
+                LineDash = new double[] { 4 }
+            },
+            Fill = new StyleOptions.FillOptions
+            {
+                Color = "rgba(0, 0, 255, 0.3)"
+            }
+        };
+    }
+
+    /// <summary>
+    /// Reads and updates the coordinates of a shape.
+    /// </summary>
+    /// <param name="shape"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public async Task ReadCoordinates(Feature feature)
+    {
+        if (_module == null)
+            return;
+
+        if (FeaturesList.All(p => p.Id != feature.Id))
+        {
+            throw new InvalidOperationException("Given shape is not assigned to map");
+        }
+
+        var c = await _module.InvokeAsync<dynamic>("MapOLGetCoordinates", _mapId, feature.Id);
+        if (c is JsonElement)
+            feature.InternalFeature.Coordinates = CoordinatesHelper.DeserializeCoordinates((JsonElement)c);
+        else
+            feature.InternalFeature.Coordinates = c;
+    }
+
+    /// <summary>
+    /// Returns a IEnumerable of all features assigned to map.
+    /// </summary>
+    public IEnumerable<Feature> FeaturesList => ShapesList.OfType<Feature>().Union(MarkersList);
 
     private void LayersOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
@@ -473,23 +789,71 @@ public partial class Map : IAsyncDisposable
 
         Task.Run(async () =>
         {
-            if (e.OldItems != null)
-                foreach (var oldLayer in e.OldItems.OfType<Layer>())
-                    await _module.InvokeVoidAsync("MapOLRemoveLayer", _mapId, oldLayer.InternalLayer);
+            if (e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                await _module.InvokeVoidAsync("MapOLSetLayers", _mapId, null);
+            }
+            else
+            {
+                if (e.OldItems != null)
+                    foreach (var oldLayer in e.OldItems.OfType<Layer>())
+                        await _module.InvokeVoidAsync("MapOLRemoveLayer", _mapId, oldLayer.InternalLayer);
 
-            if (e.NewItems != null)
-                foreach (var newLayer in e.NewItems.OfType<Layer>())
-                    await _module.InvokeVoidAsync("MapOLAddLayer", _mapId, newLayer.InternalLayer);
+                if (e.NewItems != null)
+                    foreach (var newLayer in e.NewItems.OfType<Layer>())
+                        await _module.InvokeVoidAsync("MapOLAddLayer", _mapId, newLayer.InternalLayer);
+            }
         });
     }
 
     private void ShapesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        _ = SetShapes(ShapesList);
+        if (_module == null)
+            return;
+
+        if (e.NewItems != null)
+            foreach (var newShape in e.NewItems.OfType<Shape>())
+                newShape.ParentMap = this;
+
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            _ = _module.InvokeVoidAsync("MapOLSetShapes", _mapId, null);
+        }
+        else
+        {
+            if (e.OldItems != null)
+                foreach (var oldShape in e.OldItems.OfType<Shape>())
+                    _ = _module.InvokeVoidAsync("MapOLRemoveShape", _mapId, oldShape.InternalFeature);
+
+            if (e.NewItems != null)
+                foreach (var newShape in e.NewItems.OfType<Shape>())
+                    _ = _module.InvokeVoidAsync("MapOLAddShape", _mapId, newShape.InternalFeature);
+        }
     }
 
     private void MarkersOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        _ = SetMarkers(MarkersList);
+        if (_module == null)
+            return;
+
+        if (e.NewItems != null)
+            foreach (var newShape in e.NewItems.OfType<Shape>())
+                newShape.ParentMap = this;
+
+        // when execute the following as Task, the order of execute of InvoiceAsync cannot be guaranteed
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            _ = _module.InvokeVoidAsync("MapOLMarkers", _mapId, null);
+        }
+        else
+        {
+            if (e.OldItems != null)
+                foreach (var oldShape in e.OldItems.OfType<Shape>())
+                    _ = _module.InvokeVoidAsync("MapOLRemoveShape", _mapId, oldShape.InternalFeature);
+
+            if (e.NewItems != null)
+                foreach (var newShape in e.NewItems.OfType<Shape>())
+                    _ = _module.InvokeVoidAsync("MapOLAddShape", _mapId, newShape.InternalFeature);
+        }
     }
 }

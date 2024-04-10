@@ -2,8 +2,8 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>OpenLayers.Blazor.Demo</title>
     <base href="/"/>
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css"/>
@@ -12,9 +12,9 @@
     <link href="lib/openlayers/ol.css" rel="stylesheet"/>
     <link href="_content/SpatialFocus.OpenLayers.Blazor/OpenLayers.Blazor.css" rel="stylesheet"/>
     <script src="lib/openlayers/dist/ol.min.js"></script>
-    <link rel="icon" type="image/png" href="favicon.png"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/dark.min.css" rel="stylesheet"/>
-    <link rel="stylesheet" href="lib/font-awesome/css/all.min.css"/>
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/dark.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="lib/font-awesome/css/all.min.css" />
 </head>
 
 <body>
@@ -38,9 +38,7 @@
 
 <script>
         window.highlightSnippet = function () {
-            document.querySelectorAll('pre code').forEach((el) => {
-                hljs.highlightBlock(el);
-            });
+            hljs.highlightAll();
         }
     </script>
 </body>
