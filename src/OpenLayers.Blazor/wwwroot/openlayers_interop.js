@@ -510,6 +510,8 @@ MapOL.prototype.loadGeoJson = function (json, dataProjection, raiseEvents) {
 };
 
 MapOL.prototype.addGeoJsonLayer = function (json, title) {
+    var that = this;
+
     if (this.GeoLayers && this.GeoLayers[title]) {
         var source = this.GeoLayers[title].getSource();
 
@@ -522,21 +524,60 @@ MapOL.prototype.addGeoJsonLayer = function (json, title) {
         features: (new ol.format.GeoJSON()).readFeatures(json, { featureProjection: this.Map.getView().getProjection().getCode() })
     });
 
+    var clusterSource = new ol.source.Cluster({
+        distance: 40,
+        minDistance: 10,
+        source: geoSource,
+    });
+
+    //var displaySource = this.Map.getView().getZoom() > 7 ? geoSource : clusterSource;
+
     if (this.GeoLayers && this.GeoLayers[title]) {
-        this.GeoLayers[title].setSource(geoSource);
+        this.GeoLayers[title].setSource(clusterSource);
     }
     else {
         this.GeoLayers = this.GeoLayers || {};
         this.GeoLayers[title] = new ol.layer.Vector({
             title: title,
-            source: geoSource,
-            style: (feature) => this.getGeoStyle(feature)
+            source: clusterSource,
+            //style: (feature) => this.getGeoStyle(feature)
+            style: function (feature) {
+                const size = feature.get('features')?.length;
+
+                if (size == 1) {
+                    return that.getGeoStyle(feature.get('features')[0]);
+                }
+                else {
+                    let style = styleCache[size];
+                    if (!style) {
+                        style = new ol.style.Style({
+                            image: new ol.style.Circle({
+                                radius: 10,
+                                stroke: new ol.style.Stroke({
+                                    color: '#fff',
+                                }),
+                                fill: new ol.style.Fill({
+                                    color: '#3399CC',
+                                }),
+                            }),
+                            text: new ol.style.Text({
+                                text: size?.toString(),
+                                fill: new ol.style.Fill({
+                                    color: '#fff',
+                                }),
+                            }),
+                        });
+                        styleCache[size] = style;
+                    }
+                    return style;
+                }
+            },
         });
 
         this.Map.addLayer(this.GeoLayers[title]);
     }
 }
-
+const styleCache = {};
 MapOL.prototype.setZoom = function (zoom) {
     this.Map.getView().setZoom(zoom);
 };
@@ -1234,17 +1275,24 @@ MapOL.prototype.mapStyleOptionsToStyle = function(style, feature) {
     return styleObject;
 };
 MapOL.prototype.imageStyle = function (marker) {
-    return [
-        new ol.style.Style({
-            image: new ol.style.Icon({
-                opacity: 1,
-                scale: 0.75,
-                anchorXUnits: 'pixels',
-                anchorYUnits: 'pixels',
-                src: marker.get("content")
+
+    if (marker.get("features") && marker.get("features").length > 0) {
+        console.log("Cluster", marker.get("features").length);
+    }
+    else {
+        //console.log(marker, marker.get("content"));
+        return [
+            new ol.style.Style({
+                image: new ol.style.Icon({
+                    opacity: 1,
+                    scale: 0.75,
+                    anchorXUnits: 'pixels',
+                    anchorYUnits: 'pixels',
+                    src: marker.get("content")
+                })
             })
-        })
-    ];
+        ];
+    }
 }
 
 MapOL.prototype.lineStyle = function (line) {
