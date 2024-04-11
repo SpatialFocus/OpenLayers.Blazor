@@ -552,7 +552,7 @@ MapOL.prototype.addGeoJsonLayer = function (json, title) {
                     if (!style) {
                         style = new ol.style.Style({
                             image: new ol.style.Circle({
-                                radius: 10,
+                                radius: 12,
                                 stroke: new ol.style.Stroke({
                                     color: '#fff',
                                 }),
@@ -599,9 +599,11 @@ MapOL.prototype.setZoomToExtent = function (extent) {
 };
 
 MapOL.prototype.setCenter = function (point) {
-    this.Map.getView().setCenter(ol.proj.transform(point,
-        this.Options.coordinatesProjection,
-        this.Map.getView().getProjection()));
+    this.Map.getView().animate({
+        center: ol.proj.transform(point,
+            this.Options.coordinatesProjection,
+            this.Map.getView().getProjection())
+        }, { duration: 1000 });
 };
 
 MapOL.prototype.setRotation = function (rotation) {
@@ -632,13 +634,20 @@ MapOL.prototype.getReducedFeature = function (feature) {
         type: "Feature",
         geometry: {
             type: feature.getGeometry().getType(),
-            coordinates: ol.proj.transform(feature.getGeometry().getCoordinates(), this.Map.getView().getProjection().getCode(), this.Defaults.coordinatesProjection)
+            coordinates: ol.proj.transform(feature.getGeometry().getCoordinates(), this.Map.getView().getProjection().getCode(), this.Options.coordinatesProjection)
         },
         properties: properties
     };
 
     return reduced;
 };
+
+function isCluster(feature) {
+    if (!feature || !feature.get('features')) {
+        return false;
+    }
+    return true;
+}
 
 MapOL.prototype.onMapClick = function (evt, popup, element) {
     popup.setPosition(0, 0);
@@ -648,6 +657,23 @@ MapOL.prototype.onMapClick = function (evt, popup, element) {
 
     this.Map.forEachFeatureAtPixel(evt.pixel,
         function (feature) {
+            if (isCluster(feature)) {
+
+                var features = feature.get("features");
+
+                if (features.length > 1) {
+                    // Zoom to extent of features
+                    const extent = ol.extent.boundingExtent(
+                        features.map((r) => r.getGeometry().getCoordinates()),
+                    );
+                    that.Map.getView().fit(extent, { duration: 1000, padding: [150, 150, 150, 150] });
+
+                    return;
+                }
+                else {
+                    feature = features[0]
+                }
+            }
 
             const shape = that.mapFeatureToShape(feature);
 
@@ -681,7 +707,7 @@ MapOL.prototype.onMapClick = function (evt, popup, element) {
 
     if (invokeMethod) {
         invokeMethod = false;
-        var coordinate = ol.proj.transform(evt.coordinate, this.Map.getView().getProjection().getCode(), this.Defaults.coordinatesProjection)
+        var coordinate = ol.proj.transform(evt.coordinate, that.Map.getView().getProjection().getCode(), this.Options.coordinatesProjection)
         var point = { Y: coordinate[1], X: coordinate[0] };
         this.Instance.invokeMethodAsync('OnInternalClick', point);
     }
@@ -764,8 +790,8 @@ MapOL.prototype.disableVisibleExtentChranged = false;
 MapOL.prototype.setVisibleExtent = function (extent) {
     this.disableVisibleExtentChanged = true;
 
-    var coordinate1 = ol.proj.transform([extent.x1, extent.y1], this.Defaults.coordinatesProjection, this.Map.getView().getProjection().getCode())
-    var coordinate2 = ol.proj.transform([extent.x2, extent.y2], this.Defaults.coordinatesProjection, this.Map.getView().getProjection().getCode())
+    var coordinate1 = ol.proj.transform([extent.x1, extent.y1], this.Options.coordinatesProjection, this.Map.getView().getProjection().getCode())
+    var coordinate2 = ol.proj.transform([extent.x2, extent.y2], this.Options.coordinatesProjection, this.Map.getView().getProjection().getCode())
     this.Map.getView().fit(new Array(coordinate1[0], coordinate1[1], coordinate2[0], coordinate2[1]), this.Map.getSize());
 
     this.disableVisibleExtentChanged = false;
