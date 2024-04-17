@@ -530,6 +530,7 @@ public partial class Map : IAsyncDisposable
     /// </summary>
     /// <param name="center">Center Coordinates</param>
     /// <param name="zoom">zoom level</param>
+    /// <returns>Task</returns>
     public async Task AnimateTo(Coordinate center, double zoom)
     {
         if (_module != null) await _module.InvokeVoidAsync("MapOLAnimateTo", _mapId, center, zoom);
