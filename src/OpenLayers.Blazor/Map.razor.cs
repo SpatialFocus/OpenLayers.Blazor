@@ -526,6 +526,16 @@ public partial class Map : IAsyncDisposable
     }
 
     /// <summary>
+    ///     Animated transition to the given center and zoom level
+    /// </summary>
+    /// <param name="center">Center Coordinates</param>
+    /// <param name="zoom">zoom level</param>
+    public async Task AnimateTo(Coordinate center, double zoom)
+    {
+        if (_module != null) await _module.InvokeVoidAsync("MapOLAnimateTo", _mapId, center, zoom);
+    }
+
+    /// <summary>
     ///     Sets the rotation of the map.
     /// </summary>
     /// <param name="rotation">Rotation in radians</param>

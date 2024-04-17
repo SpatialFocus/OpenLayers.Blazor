@@ -12,6 +12,10 @@ export function MapOLCenter(mapId, point) {
     _MapOL[mapId].setCenter(point);
 }
 
+export function MapOLAnimateTo(mapId, center, zoom) {
+    _MapOL[mapId].animateTo(center, zoom);
+}
+
 export function MapOLRotate(mapId, rotation) {
     _MapOL[mapId].setRotation(rotation);
 }
@@ -599,12 +603,19 @@ MapOL.prototype.setZoomToExtent = function (extent) {
 };
 
 MapOL.prototype.setCenter = function (point) {
-    this.Map.getView().animate({
-        center: ol.proj.transform(point,
-            this.Options.coordinatesProjection,
-            this.Map.getView().getProjection())
-        }, { duration: 1000 });
+    this.Map.getView().setCenter(ol.proj.transform(point,
+        this.Options.coordinatesProjection,
+        this.Map.getView().getProjection()));
 };
+
+MapOL.prototype.animateTo = function (point, zoom) {
+        this.Map.getView().animate({
+            center: ol.proj.transform(point,
+                this.Options.coordinatesProjection,
+                this.Map.getView().getProjection()),
+            zoom: zoom
+        }, { duration: 1000 });
+}
 
 MapOL.prototype.setRotation = function (rotation) {
     this.Map.getView().setRotation(rotation);
